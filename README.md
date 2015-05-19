@@ -1,8 +1,37 @@
-##Deploying a sharded, production-ready MongoDB cluster with Ansible
-------------------------------------------------------------------------------
+## Deploying a sharded, production-ready MongoDB cluster with Ansible
+----------------------------------------------------------------------
+
+Ever wanted a scalable mongo cluster that is ready in 5 mins?
 
 - Requires Ansible 1.2
 - Expects CentOS/RHEL 6 hosts
+
+### Features
+
+- Minimal dev ops time; 5 min setup
+- Reliable management; low risk of operation errors
+- Simple scaling; just add nodes to your inventory
+
+### Installation
+
+```bash
+# Optional: Create droplets on digitalocean
+# Else skip if you already have servers
+cd digitalocean-setup/
+./create-cluster.sh 3 2 # For a 5 node cluster
+cd ..
+
+# Provision servers with mongo software and config
+cp env.example.yml env.yml
+vim env.yml # set a password to be used for mongo admin auth
+cp hosts.example hosts
+vim hosts # Enter hostname / IPs of nodes in cluster
+ansible-playbook -i hosts site.yml # sit back for 5 mins
+
+# Test sharding
+ansible-playbook -i hosts playbooks/testsharding.yml -e servername=mongos1
+```
+
 
 ### A Primer
 ---------------------------------------------
@@ -19,7 +48,7 @@ in BJSON format.
 Another thing to notice is that NoSQL-style databases have a looser consistency
 model. As an example, the second document in the users collection has an
 additonal field of 'last name'.
- 
+
 ### Data Replication
 ------------------------------------
 
@@ -45,7 +74,7 @@ server: the first shard getting ranges from 1-29,  and so on. When a client want
 to access a certian document it contacts the query router (mongos process),
 which in turn contacts the 'configuration node', a lightweight mongod
 process) that keeps a record of which ranges of chunks are distributed across
-which shards. 
+which shards.
 
 Please do note that every shard server should be backed by a replica set, so
 that when data is written/queried copies of the data are available. So in a
@@ -70,7 +99,7 @@ collection is split and balanced across shards.
 ----------------------------
 
 ![Alt text](images/site.png "Site")
-  
+
 The diagram above illustrates the deployment model for a MongoDB cluster deployed by
 Ansible. This deployment model focuses on deploying three shard servers,
 each having a replica set, with the backup replica servers serving as the other two shard
@@ -85,7 +114,7 @@ all the processes are secured using keyfiles.
 Edit the group_vars/all file to reflect the below variables.
 
 1) iface: 'eth1'     # the interface to be used for all communication.
-		
+
 2) Set a unique mongod_port variable in the inventory file for each MongoDB
 server.
 
@@ -114,7 +143,7 @@ The inventory file looks as follows:
 		mongo2
 		mongo3
 
-		#The list of servers where mongos servers would run. 
+		#The list of servers where mongos servers would run.
 		[mongos_servers]
 		mongos1
 		mongos2
@@ -124,7 +153,7 @@ Build the site with the following command:
 		ansible-playbook -i hosts site.yml
 
 
-#### Verifying the Deployment 
+#### Verifying the Deployment
 ---------------------------------------------
 
 Once configuration and deployment has completed we can check replication set
@@ -132,7 +161,7 @@ availibitly by connecting to individual primary replication set nodes, 'mongo
 --host 192.168.1.1 --port 2700' and issue the command to query the status of
 replication set, we should get a similar output.
 
-		
+
 		web2:PRIMARY> rs.status()
 		{
 			"set" : "web2",
@@ -172,9 +201,9 @@ We can check the status of the shards as follows: connect to the mongos service
 the status of the Shards:
 
 
-		 
+
 		mongos> sh.status()
-		--- Sharding Status --- 
+		--- Sharding Status ---
 		  sharding version: { "_id" : 1, "version" : 3 }
 		  shards:
 			{  "_id" : "web2",  "host" : "web2/web2:2013,web3:2013" }
@@ -196,7 +225,7 @@ The above mentioned steps can be tested with an automated playbook.
 
 Issue the following command to run the test. Pass one of the _mongos_ servers
 in the _servername_ variable.
-		
+
 		ansible-playbook -i hosts playbooks/testsharding.yml -e servername=server1
 
 
@@ -205,7 +234,7 @@ on to any mongos server and issuing the following command. The output displays
 the number of chunks spread across the shards.
 
 		mongos> sh.status()
-			--- Sharding Status --- 
+			--- Sharding Status ---
   			sharding version: { "_id" : 1, "version" : 3 }
   			shards:
 			{  "_id" : "bensible",  "host" : "bensible/bensible:20103,web2:20103,web3:20103" }
@@ -214,16 +243,16 @@ the number of chunks spread across the shards.
   			databases:
 			{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
 			{  "_id" : "test",  "partitioned" : true,  "primary" : "web3" }
-			
+
 				test.test_collection chunks:
-				
+
 				bensible	7
 				web2	6
 				web3	7
-			
-			
 
- 
+
+
+
 ### Scaling the Cluster
 ---------------------------------------
 
@@ -251,7 +280,7 @@ To add a new node to the existing MongoDB Cluster, modify the inventory file as 
 		mongo2
 		mongo3
 
-		#The list of servers where mongos servers would run. 
+		#The list of servers where mongos servers would run.
 		[mongos_servers]
 		mongos1
 		mongos2
@@ -269,7 +298,7 @@ seeing the chunks being rebalanced to the newly added node.
 
 			$/usr/bin/mongo localhost:8888/admin -u admin -p 123456
 			mongos> sh.status()
-				--- Sharding Status --- 
+				--- Sharding Status ---
   				sharding version: { "_id" : 1, "version" : 3 }
   			shards:
 			{  "_id" : "bensible",  "host" : "bensible/bensible:20103,web2:20103,web3:20103" }
@@ -279,12 +308,10 @@ seeing the chunks being rebalanced to the newly added node.
   			databases:
 			{  "_id" : "admin",  "partitioned" : false,  "primary" : "config" }
 			{  "_id" : "test",  "partitioned" : true,  "primary" : "bensible" }
-		
+
 			test.test_collection chunks:
-			
+
 				web4	3
 				web3	6
 				web2	6
 				bensible	5
-
-    
