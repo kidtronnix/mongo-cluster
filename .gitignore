@@ -1,3 +1,4 @@
 digitalocean-setup/config.sh
+digitalocean-setup/cluster_*.json
 env.yml
 hosts

@@ -28,8 +28,8 @@ cp hosts.example hosts
 vim hosts # Enter hostname / IPs of nodes in cluster
 ansible-playbook -i hosts site.yml # sit back for 5 mins
 
-# Test sharding
-ansible-playbook -i hosts playbooks/testsharding.yml -e servername=mongos1
+# Enable sharding on a db and collection
+ansible-playbook -i hosts playbooks/initcollection.yml -e "servername=mongos1 mongo_db_name=test mongo_db_user=admin mongo_db_pass=123456 mongo_coll=test_coll"
 ```
 
 
