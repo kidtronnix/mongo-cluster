@@ -1,0 +1,23 @@
+---
+# The playbook creates a new database test and populates data in the database to test the sharding.
+
+
+- hosts: "{{ servername }}"
+  vars_files:
+    - ../env.yml
+  user: root
+  tasks:
+   - name: Create a new database and user
+     mongodb_user: login_user=admin login_password={{mongo_admin_pass}} login_port={{mongos_port}} database={{mongo_db_name}} user={{mongo_db_user}} password={{mongo_db_pass}} state=present
+
+   - name: Pause for the user to get created and replicated
+     pause: minutes=3
+
+   - name: Enable shard key
+     command: '/usr/bin/mongo localhost:{{mongos_port}}/{{mongo_db_name}} -u {{mongo_db_user}} -p {{mongo_db_pass}} --eval "db.{{mongo_coll}}.ensureIndex({_id:\"hashed\"})"'
+
+   - name: Enable sharding on the database
+     command: '/usr/bin/mongo localhost:{{mongos_port}}/admin -u admin -p {{mongo_admin_pass}} --eval "db.runCommand( { enableSharding: \"{{mongo_db_name}}\" } )"'
+
+   - name: Enable sharding on the collection
+     command: '/usr/bin/mongo localhost:{{mongos_port}}/admin -u admin -p {{mongo_admin_pass}} --eval "db.runCommand( { shardCollection: \"{{mongo_db_name}}.{{mongo_coll}}\", key : { _id: \"hashed\" }  })"'
