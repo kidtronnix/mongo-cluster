@@ -1,5 +1,12 @@
 #The site wide list of mongodb servers
 
+mongo1 ansible_ssh_host=mongo1.example.com ansible_ssh_user=root mongod_port=2700
+mongo2 ansible_ssh_host=mongo2.example.com ansible_ssh_user=root mongod_port=2701
+mongo3 ansible_ssh_host=mongo3.example.com ansible_ssh_user=root mongod_port=2702
+
+mongos1 ansible_ssh_host=mongos1.example.com ansible_ssh_user=root
+mongos2 ansible_ssh_host=mongos2.example.com ansible_ssh_user=root
+
 # the mongo servers need a mongod_port variable set, and they must not conflict.
 [mongo_servers]
 mongo1 mongod_port=2700
@@ -23,7 +30,5 @@ mongo3
 
 #The list of servers where mongos servers would run.
 [mongos_servers]
-mongo1
-mongo2
-
-
+mongos1
+mongos2

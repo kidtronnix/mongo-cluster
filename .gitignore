@@ -1,2 +1,3 @@
 digitalocean-setup/config.sh
+env.yml
 hosts

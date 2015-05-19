@@ -1,7 +1,10 @@
 ---
 # The playbook creates a new database test and populates data in the database to test the sharding.
 
-- hosts: $servername
+
+- hosts: "{{ servername }}"
+  vars_files:
+    - ../env.yml
   user: root
   tasks:
    - name: Create a new database and user
