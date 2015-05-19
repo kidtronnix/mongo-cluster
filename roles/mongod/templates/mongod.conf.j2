@@ -2,7 +2,7 @@
 smallfiles=true
 
 #where to log
-logpath=/var/log/mongo/mongod-{{ inventory_hostname }}.log
+logpath=/var/log/mongodb/mongod-{{ inventory_hostname }}.log
 
 logappend=true
 
@@ -11,11 +11,11 @@ fork = true
 
 port = {{ mongod_port }}
 
-dbpath={{ mongodb_datadir_prefix }}mongo-{{ inventory_hostname }}
+dbpath={{ mongodb_datadir_prefix }}/mongo-{{ inventory_hostname }}
 keyFile={{ mongodb_datadir_prefix }}/secret
 
 # location of pidfile
-pidfilepath = /var/run/mongod.pid
+pidfilepath = /var/run/mongodb/mongod.pid
 
 
 # Ping interval for Mongo monitoring server.
